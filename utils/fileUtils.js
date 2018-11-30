@@ -7,7 +7,7 @@ const addAndPublishFolderToIPFS = (ipfs) => {
     }
     console.log('Add result: ', r);
     const parentHash = r.find(r => r.path === 'files').hash;
-    ipfs.name.publish('/ipfs/' + parentHash, {}, (e, r) => {
+    ipfs.name.publish('/ipfs/' + parentHash, {key: process.env.IPFS_FILES_KEY}, (e, r) => {
       console.log('Parent hash: ', parentHash);
       console.log('Error: ', e);
       console.log('Publish result: ', r);
