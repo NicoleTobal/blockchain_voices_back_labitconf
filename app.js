@@ -53,25 +53,9 @@ app.post('/api/delete_file', function (req, res) {
   res.sendStatus(200);
 });
 
-app.get('/api/get_pending_files', function (req, res) {
+app.get('/api/get_files', function (req, res) {
   //console.log(req.headers);
-  MongoDB.getFilesByStatusInDB('pending').toArray((error, documents) => {
-    if (error) throw error;
-    res.send(documents);
-  });
-});
-
-app.get('/api/get_rejected_files', function (req, res) {
-  //console.log(req.headers);
-  MongoDB.getFilesByStatusInDB('rejected').toArray((error, documents) => {
-    if (error) throw error;
-    res.send(documents);
-  });
-});
-
-app.get('/api/get_deleted_files', function (req, res) {
-  //console.log(req.headers);
-  MongoDB.getFilesByStatusInDB('deleted').toArray((error, documents) => {
+  MongoDB.getAllFilesFromDB().toArray((error, documents) => {
       if (error) throw error;
       res.send(documents);
   });

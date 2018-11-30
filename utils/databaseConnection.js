@@ -22,6 +22,6 @@ export const updateFileStatusInDB = (hash, status) => {
   });
 }
 
-export const getFilesByStatusInDB = (status) => {
-  return mongoDb.collection("files").find({status});
+export const getAllFilesFromDB = () => {
+  return mongoDb.collection("files").find({});
 }
