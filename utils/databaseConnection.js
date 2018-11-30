@@ -1,5 +1,5 @@
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/blockchain_voices";
+var url = "mongodb://" + process.env.DB_HOST + ":" + process.env.DB_PORT + "/" + process.env.DB_NAME;
 
 let mongoDb = null;
 
@@ -24,4 +24,20 @@ export const updateFileStatusInDB = (hash, status) => {
 
 export const getAllFilesFromDB = () => {
   return mongoDb.collection("files").find({});
+}
+
+export const createUserInDB = (username, password, callback) => {
+  mongoDb.collection("users").insertOne({username, password}, function(err, res) {
+    if (err) throw err;
+    console.log("1 document inserted");
+    callback(err, res);
+  });
+}
+
+export const findUserByIdInDB = (_id) => {
+  return mongoDb.collection("users").findOne({_id});
+}
+
+export const findUserByUsernameInDB = (username) => {
+  return mongoDb.collection("users").findOne({username});
 }

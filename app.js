@@ -2,12 +2,14 @@ var express = require('express');
 var app = express();
 import * as MongoDB from './utils/databaseConnection';
 import { deleteFile, approveFile } from './utils/fileUtils';
+import { register, verifyAuthHeader, login } from './utils/auth/Auth';
+import { validateIPFSHash } from './utils/validationsHelper';
 const IPFS = require('ipfs')
 var ipfsClient = require('ipfs-http-client')
 const bodyParser = require('body-parser');
 
 const node = new IPFS();
-var ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
+var ipfs = ipfsClient(process.env.IPFS_HOST, process.env.IPFS_PORT, { protocol: 'http' })
 
 node.on('ready', async () => {
   const version = await node.version();
@@ -17,47 +19,61 @@ node.on('ready', async () => {
 
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  if (req.originalUrl.includes('/api/admin/')) {
+    verifyAuthHeader(req.headers['x-access-token'], res, next);
+  } else {
+    next();
+  }
+});
+
 /******* ALL USERS ****************/
 
 app.post('/api/add_file', function (req, res) {
-  //console.log(req.headers);
+  if(!validateIPFSHash(req.body.hash)) {
+    res.status(500).send("Invalid Hash");
+  }
   MongoDB.saveFileInDB(req.body.name, req.body.hash, 'pending');
   res.sendStatus(200);
 });
 
-/******* ADMIN USERS ****************/
-
-app.get('/api/login', function (req, res) {
-  //console.log(req.headers);
-  //request to db
-  res.sendStatus(200);
+app.post('/api/login', function (req, res) {
+  login(req.body.username, req.body.password, function (err, data) {
+    if (!data) return res.status(err.errCode).send(err.errMessage);
+    res.status(200).send(data);
+  });
 });
 
-app.post('/api/approve_file', function (req, res) {
-  //console.log(req.headers);
+/******* ADMIN USERS ****************/
+
+app.post('/api/admin/register', function (req, res) {
+  register(req.body.username, req.body.password, function (err, data) {
+    if (err) return res.status(500).send("There was a problem registering the user.");
+    res.status(200).send(data);
+  })
+});
+
+app.post('/api/admin/approve_file', function (req, res) {
   approveFile(ipfs, req.body.name, req.body.hash);
   MongoDB.updateFileStatusInDB(req.body.hash, 'approved');
   res.sendStatus(200);
 });
 
-app.post('/api/reject_file', function (req, res) {
-  //console.log(req.headers);
+app.post('/api/admin/reject_file', function (req, res) {
   updateFileStatusInDB(req.body.hash, 'rejected')
   res.sendStatus(200);
 });
 
-app.post('/api/delete_file', function (req, res) {
-  //console.log(req.headers);
+app.post('/api/admin/delete_file', function (req, res) {
   deleteFile(ipfs, req.body.name, req.body.hash);
   MongoDB.updateFileStatusInDB(req.body.hash, 'deleted')
   res.sendStatus(200);
 });
 
-app.get('/api/get_files', function (req, res) {
-  //console.log(req.headers);
+app.get('/api/admin/get_files', function (req, res) {
   MongoDB.getAllFilesFromDB().toArray((error, documents) => {
-      if (error) throw error;
-      res.send(documents);
+    if (error) throw error;
+    res.send(documents);
   });
 });
 
@@ -65,6 +81,7 @@ app.get('/api/get_files', function (req, res) {
 app.use(function (req, res, next) {
 
   // Website you wish to allow to connect
+  //change to frontend url
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   // Request methods you wish to allow
