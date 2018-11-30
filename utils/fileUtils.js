@@ -19,7 +19,7 @@ export const saveFile = (file) => {
   fs.writeFile('./temp_files', file, {}, () => {});
 };
 
-export const aproveFile = (ipfs, name, hash) => {
+export const approveFile = (ipfs, name, hash) => {
   ipfs.get('/ipfs/' + hash, function (err, files) {
     if (err) {
       return console.log('Error: ', err);

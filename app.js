@@ -1,18 +1,13 @@
 var express = require('express');
 var app = express();
 import * as MongoDB from './utils/databaseConnection';
-import { deleteFile, aproveFile } from './utils/fileUtils';
+import { deleteFile, approveFile } from './utils/fileUtils';
 const IPFS = require('ipfs')
 var ipfsClient = require('ipfs-http-client')
 const bodyParser = require('body-parser');
 
 const node = new IPFS();
 var ipfs = ipfsClient('localhost', '5001', { protocol: 'http' })
-
-app.get('/', function (req, res) {
-  res.send('Hello World!')
-});
-
 
 node.on('ready', async () => {
   const version = await node.version();
@@ -22,11 +17,15 @@ node.on('ready', async () => {
 
 app.use(bodyParser.json());
 
+/******* ALL USERS ****************/
+
 app.post('/api/add_file', function (req, res) {
   //console.log(req.headers);
-  //add file in db
+  MongoDB.saveFileInDB(req.body.name, req.body.hash, 'pending');
   res.sendStatus(200);
 });
+
+/******* ADMIN USERS ****************/
 
 app.get('/api/login', function (req, res) {
   //console.log(req.headers);
@@ -34,42 +33,48 @@ app.get('/api/login', function (req, res) {
   res.sendStatus(200);
 });
 
-app.post('/api/aprove_file', function (req, res) {
+app.post('/api/approve_file', function (req, res) {
   //console.log(req.headers);
-  aproveFile(ipfs, req.body.name, req.body.hash);
-  //modify status in db
+  approveFile(ipfs, req.body.name, req.body.hash);
+  MongoDB.updateFileStatusInDB(req.body.hash, 'approved');
   res.sendStatus(200);
 });
 
 app.post('/api/reject_file', function (req, res) {
   //console.log(req.headers);
-  //modify status in db
+  updateFileStatusInDB(req.body.hash, 'rejected')
   res.sendStatus(200);
 });
 
 app.post('/api/delete_file', function (req, res) {
   //console.log(req.headers);
   deleteFile(ipfs, req.body.name, req.body.hash);
-  //modify status in db
+  MongoDB.updateFileStatusInDB(req.body.hash, 'deleted')
   res.sendStatus(200);
 });
 
 app.get('/api/get_pending_files', function (req, res) {
   //console.log(req.headers);
-  //request to db
-  res.sendStatus(200);
+  MongoDB.getFilesByStatusInDB('pending').toArray((error, documents) => {
+    if (error) throw error;
+    res.send(documents);
+  });
 });
 
 app.get('/api/get_rejected_files', function (req, res) {
   //console.log(req.headers);
-  //request to db
-  res.sendStatus(200);
+  MongoDB.getFilesByStatusInDB('rejected').toArray((error, documents) => {
+    if (error) throw error;
+    res.send(documents);
+  });
 });
 
 app.get('/api/get_deleted_files', function (req, res) {
   //console.log(req.headers);
-  //request to db
-  res.sendStatus(200);
+  MongoDB.getFilesByStatusInDB('deleted').toArray((error, documents) => {
+      if (error) throw error;
+      res.send(documents);
+  });
 });
 
 // Add headers

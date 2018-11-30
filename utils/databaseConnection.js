@@ -8,9 +8,20 @@ MongoClient.connect(url, function(err, db) {
   mongoDb = db.db("blockchain_voices");
 });
 
-export const saveFileInDB = (name, path, hash) => {
-  mongoDb.collection("files").insertOne({name, path, hash}, function(err, res) {
+export const saveFileInDB = (name, hash, status) => {
+  mongoDb.collection("files").insertOne({name, hash, status}, function(err, res) {
     if (err) throw err;
     console.log("1 document inserted");
   });
+}
+
+export const updateFileStatusInDB = (hash, status) => {
+  mongoDb.collection("files").update({hash}, {$set: {status}}, { upsert: true }, function(err, res) {
+    if (err) throw err;
+    console.log("1 document updated");
+  });
+}
+
+export const getFilesByStatusInDB = (status) => {
+  return mongoDb.collection("files").find({status});
 }
