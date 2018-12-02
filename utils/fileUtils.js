@@ -19,14 +19,14 @@ export const saveFile = (file) => {
   fs.writeFile('./temp_files', file, {}, () => {});
 };
 
-export const approveFile = (ipfs, name, hash) => {
+export const approveFile = (ipfs, hash) => {
   ipfs.get('/ipfs/' + hash, function (err, files) {
     if (err) {
       return console.log('Error: ', err);
     }
     files.forEach((file) => {
       console.log('File path: ', file.path);
-      fs.writeFile("./files/" + name, file.content, function(err) {
+      fs.writeFile("./files/" + hash, file.content, function(err) {
         if(err) {
             return console.log('Error: ', err);
         }
@@ -37,8 +37,8 @@ export const approveFile = (ipfs, name, hash) => {
   });
 }
 
-export const deleteFile = (ipfs, name, hash) => {
-  fs.unlink('./files/' + name, (err) => {
+export const deleteFile = (ipfs, hash) => {
+  fs.unlink('./files/' + hash, (err) => {
     if(err) {
       return console.log('Error: ', err);
     }

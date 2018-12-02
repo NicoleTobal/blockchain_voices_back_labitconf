@@ -19,6 +19,27 @@ node.on('ready', async () => {
 
 app.use(bodyParser.json());
 
+// Add headers
+app.use(function (req, res, next) {
+
+  // Website you wish to allow to connect
+  //change to frontend url
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Access-Control-Allow-Origin');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
+
 app.use((req, res, next) => {
   if (req.originalUrl.includes('/api/admin/')) {
     verifyAuthHeader(req.headers['x-access-token'], res, next);
@@ -54,7 +75,7 @@ app.post('/api/admin/register', function (req, res) {
 });
 
 app.post('/api/admin/approve_file', function (req, res) {
-  approveFile(ipfs, req.body.name, req.body.hash);
+  approveFile(ipfs, req.body.hash);
   MongoDB.updateFileStatusInDB(req.body.hash, 'approved');
   res.sendStatus(200);
 });
@@ -65,7 +86,7 @@ app.post('/api/admin/reject_file', function (req, res) {
 });
 
 app.post('/api/admin/delete_file', function (req, res) {
-  deleteFile(ipfs, req.body.name, req.body.hash);
+  deleteFile(ipfs, req.body.hash);
   MongoDB.updateFileStatusInDB(req.body.hash, 'deleted')
   res.sendStatus(200);
 });
@@ -75,27 +96,6 @@ app.get('/api/admin/get_files', function (req, res) {
     if (error) throw error;
     res.send(documents);
   });
-});
-
-// Add headers
-app.use(function (req, res, next) {
-
-  // Website you wish to allow to connect
-  //change to frontend url
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  // Request methods you wish to allow
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-
-  // Pass to next layer of middleware
-  next();
 });
 
 app.listen(3007, async function () {

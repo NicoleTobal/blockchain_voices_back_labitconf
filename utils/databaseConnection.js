@@ -5,13 +5,17 @@ let mongoDb = null;
 
 MongoClient.connect(url, function(err, db) {
   if (err) throw err;
-  mongoDb = db.db("blockchain_voices");
+  mongoDb = db.db(process.env.DB_NAME);
 });
 
 export const saveFileInDB = (name, hash, status) => {
-  mongoDb.collection("files").insertOne({name, hash, status}, function(err, res) {
-    if (err) throw err;
-    console.log("1 document inserted");
+  findFileByHashInDB(hash).then((file) => {
+    if (!file) {
+      mongoDb.collection("files").insertOne({name, hash, status}, function(err, res) {
+        if (err) throw err;
+        console.log("1 document inserted");
+      });
+    }
   });
 }
 
@@ -40,4 +44,8 @@ export const findUserByIdInDB = (_id) => {
 
 export const findUserByUsernameInDB = (username) => {
   return mongoDb.collection("users").findOne({username});
+}
+
+const findFileByHashInDB = (hash) => {
+  return mongoDb.collection("files").findOne({hash});
 }
