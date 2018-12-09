@@ -85,7 +85,7 @@ app.post('/api/admin/approve_file', function (req, res) {
 });
 
 app.post('/api/admin/reject_file', function (req, res) {
-  updateFileStatusInDB(req.body.hash, 'rejected')
+  MongoDB.updateFileStatusInDB(req.body.hash, 'rejected')
   res.sendStatus(200);
 });
 
