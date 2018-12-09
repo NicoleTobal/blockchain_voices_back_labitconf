@@ -9,7 +9,7 @@ var ipfsClient = require('ipfs-http-client')
 const bodyParser = require('body-parser');
 
 const node = new IPFS();
-var ipfs = ipfsClient(process.env.IPFS_HOST, process.env.IPFS_PORT, { protocol: 'http' })
+var ipfs = ipfsClient({host: 'api.blockchainvoices.org', port: 443, protocol: 'https'})
 
 node.on('ready', async () => {
   const version = await node.version();
